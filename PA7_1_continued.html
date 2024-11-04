@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>pa7_1_continued</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="PA7_1_continued_files/libs/clipboard/clipboard.min.js"></script>
+<script src="PA7_1_continued_files/libs/quarto-html/quarto.js"></script>
+<script src="PA7_1_continued_files/libs/quarto-html/popper.min.js"></script>
+<script src="PA7_1_continued_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="PA7_1_continued_files/libs/quarto-html/anchor.min.js"></script>
+<link href="PA7_1_continued_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="PA7_1_continued_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="PA7_1_continued_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="PA7_1_continued_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="PA7_1_continued_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<p>Once again consider four modeling options for house price:</p>
+<p>Using only the size and number of rooms. Using size, number of rooms, and building type. Using size and building type, and their interaction. Using a 5-degree polynomial on size, a 5-degree polynomial on number of rooms, and also building type. Use cross_val_score with the pipelines you made earlier to find the cross-validated root mean squared error for each model.</p>
+<p>Which do you prefer? Does this agree with your conclusion from earlier?</p>
+<div id="cell-1" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler, OneHotEncoder, PolynomialFeatures</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> r2_score</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.compose <span class="im">import</span> ColumnTransformer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-2" class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>lr <span class="op">=</span> LinearRegression()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> ames.drop(<span class="st">"SalePrice"</span>, axis <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> ames[<span class="st">"SalePrice"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Model 1</p>
+<div id="cell-4" class="cell" data-outputid="24736532-e4bc-4f75-a202-8ff578f63bfd" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">#("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>, StandardScaler(), [<span class="st">"Gr Liv Area"</span>, <span class="st">"TotRms AbvGrd"</span>])</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"drop"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>lr_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"linear_regression"</span>, LinearRegression())]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>).set_output(transform<span class="op">=</span><span class="st">"pandas"</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> cross_val_score(lr_pipeline_1, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<pre><code>array([0.49734232, 0.48672143, 0.40178127, 0.53395268, 0.60124607])</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell" data-outputid="87346cfa-5d74-4698-d488-df9636844156" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>scores.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<pre><code>0.504208752508862</code></pre>
+</div>
+</div>
+<p>Model 2</p>
+<div id="cell-7" class="cell" data-outputid="e92d93f4-3ab1-4db5-9917-335ac3dd108a" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#dummy</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.compose <span class="im">import</span> ColumnTransformer</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>, OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>), [<span class="st">"Bldg Type"</span>]),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>, StandardScaler(), [<span class="st">"Gr Liv Area"</span>, <span class="st">"TotRms AbvGrd"</span>])</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"drop"</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>).set_output(transform <span class="op">=</span> <span class="st">"pandas"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>lr_pipeline <span class="op">=</span> Pipeline(</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"linear_regression"</span>, LinearRegression())]</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#lr_pipeline</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> cross_val_score(lr_pipeline, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>scores</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>scores.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
+<pre><code>0.5334561732637108</code></pre>
+</div>
+</div>
+<p>MODEL 3</p>
+<div id="cell-9" class="cell" data-outputid="8d2c70f7-d884-431d-f14e-f368c91c9b1d" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Preprocess: Standardize Gr Liv Area and one-hot encode Bldg Type</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ct_pre <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"standardize"</span>, StandardScaler(), [<span class="st">"Gr Liv Area"</span>]),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"dummify"</span>, OneHotEncoder(sparse_output<span class="op">=</span><span class="va">False</span>), [<span class="st">"Bldg Type"</span>])</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    remainder<span class="op">=</span><span class="st">"drop"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>).set_output(transform<span class="op">=</span><span class="st">"pandas"</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>ct_inter <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only <span class="op">=</span> <span class="va">True</span>), [<span class="st">"standarize__Gr Liv Area"</span>, <span class="st">"dummify_Bldg Type_1Fam"</span>]),</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only <span class="op">=</span> <span class="va">True</span>), [<span class="st">"standarize__Gr Liv Area"</span>, <span class="st">"dummify_Bldg Type_2fmCon"</span>]),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only <span class="op">=</span> <span class="va">True</span>), [<span class="st">"standarize__Gr Liv Area"</span>, <span class="st">"dummify_Bldg Type_Duplex"</span>]),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only <span class="op">=</span> <span class="va">True</span>), [<span class="st">"standarize__Gr Liv Area"</span>, <span class="st">"dummify_Bldg Type_Twnhs"</span>]),</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only <span class="op">=</span> <span class="va">True</span>), [<span class="st">"standarize__Gr Liv Area"</span>, <span class="st">"dummify_Bldg Type_TwnhsE"</span>]),</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"drop"</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>).set_output(transform <span class="op">=</span> <span class="st">"pandas"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Build the pipeline</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>lr_pipeline <span class="op">=</span> Pipeline(</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"preprocessing"</span>, ct_pre),  <span class="co"># Apply the standardization and one-hot encoding</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"interaction"</span>, PolynomialFeatures(interaction_only<span class="op">=</span><span class="va">True</span>, include_bias<span class="op">=</span><span class="va">False</span>)),</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"linear_regression"</span>, LinearRegression())  <span class="co"># Fit a linear regression model</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> cross_val_score(lr_pipeline, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
+<pre><code>array([0.55489258, 0.5421879 , 0.43095771, 0.58264186, 0.61362154])</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-outputid="27fed71b-735f-40d7-96cd-e99e4ea21e5b" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>scores.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
+<pre><code>0.5448603188171477</code></pre>
+</div>
+</div>
+<p>MODEL 4: Using a 5-degree polynomial on size, a 5-degree polynomial on number of rooms, and also building type.</p>
+<div id="cell-12" class="cell" data-outputid="371b6745-88ad-4fc6-f60b-9a4ff28a4c21" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Using a 5-degree polynomial on size, a 5-degree polynomial on number of rooms, and also building type.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>ct_pre <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"standardize"</span>, StandardScaler(), [<span class="st">"Gr Liv Area"</span>, <span class="st">"TotRms AbvGrd"</span>]),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"dummify"</span>, OneHotEncoder(sparse_output<span class="op">=</span><span class="va">False</span>), [<span class="st">"Bldg Type"</span>])</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    remainder<span class="op">=</span><span class="st">"drop"</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>).set_output(transform<span class="op">=</span><span class="st">"pandas"</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>ct_degree <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"degree"</span>, PolynomialFeatures(degree <span class="op">=</span> <span class="dv">5</span>), [<span class="st">"standardize__Gr Liv Area"</span>, <span class="st">"standardize__TotRms AbvGrd"</span>]),</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    remainder <span class="op">=</span> <span class="st">"drop"</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>).set_output(transform <span class="op">=</span> <span class="st">"pandas"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>lr_pipeline <span class="op">=</span> Pipeline(</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"preprocessing"</span>, ct_pre),  <span class="co"># Apply the standardization and one-hot encoding</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"degree"</span>, ct_degree),</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"linear_regression"</span>, LinearRegression())  <span class="co"># Fit a linear regression model</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> cross_val_score(lr_pipeline, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
+<pre><code>array([ 0.48950908,  0.45681703, -2.03006451,  0.54602216,  0.47540921])</code></pre>
+</div>
+</div>
+<div id="cell-13" class="cell" data-outputid="fafb6768-a315-4849-c672-b4d92e71e568" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>scores.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="35">
+<pre><code>-0.012461403864299147</code></pre>
+</div>
+</div>
+<p>R^2:</p>
+<p>Model 1: 0.504208752508862</p>
+<p>Model 2: 0.5334561732637108</p>
+<p>Model 3: 0.5448603188171477</p>
+<p>Model 4: -0.012461403864299147</p>
+<p>Model 3 has the highest R^2</p>
+<p>Consider one hundred modeling options for house price:</p>
+<p>House size, trying degrees 1 through 10 Number of rooms, trying degrees 1 through 10 Building Type Hint: The dictionary of possible values that you make to give to GridSearchCV will have two elements instead of one.</p>
+<p>Q1: Which model performed the best?</p>
+<p>Q2: What downsides do you see of trying all possible model options? How might you go about choosing a smaller number of tuning values to try?</p>
+<div id="cell-16" class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> GridSearchCV</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>ct_poly <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>, OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>), [<span class="st">"Bldg Type"</span>]),</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"polynomial_sqft"</span>, PolynomialFeatures(), [<span class="st">"Gr Liv Area"</span>]),</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"polynomial_rooms"</span>, PolynomialFeatures(), [<span class="st">"TotRms AbvGrd"</span>])</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"drop"</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>lr_pipeline_poly <span class="op">=</span> Pipeline(</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct_poly),</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"linear_regression"</span>, LinearRegression())]</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>).set_output(transform<span class="op">=</span><span class="st">"pandas"</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>degrees <span class="op">=</span> {<span class="st">'preprocessing__polynomial_sqft__degree'</span>: np.arange(<span class="dv">1</span>, <span class="dv">11</span>),</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">'preprocessing__polynomial_rooms__degree'</span>: np.arange(<span class="dv">1</span>, <span class="dv">11</span>)}</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>gscv <span class="op">=</span> GridSearchCV(lr_pipeline_poly, degrees, cv <span class="op">=</span> <span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-17" class="cell" data-outputid="e3505ca2-569c-4458-8bbe-5373aa6e4041" data-execution_count="61">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>gscv_fitted <span class="op">=</span> gscv.fit(X, y)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>gscv_fitted.cv_results_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<pre><code>{'mean_fit_time': array([0.02610183, 0.01961937, 0.01910205, 0.01769028, 0.01947575,
+        0.01838012, 0.0194943 , 0.05170045, 0.08079143, 0.0254333 ,
+        0.02973409, 0.01698742, 0.01874795, 0.0191319 , 0.01775451,
+        0.01845202, 0.04181266, 0.04545574, 0.06373434, 0.04492116,
+        0.02948103, 0.01721311, 0.02092957, 0.0200223 , 0.01872888,
+        0.03421555, 0.03349247, 0.02082009, 0.04859381, 0.02524891,
+        0.03266764, 0.03081112, 0.02905812, 0.09429417, 0.08621364,
+        0.05726805, 0.04913716, 0.12071638, 0.07423506, 0.02201157,
+        0.02267365, 0.01815424, 0.02214355, 0.02623796, 0.04684038,
+        0.02285314, 0.041119  , 0.04511476, 0.02529078, 0.03439593,
+        0.02195501, 0.01852069, 0.03871398, 0.06497474, 0.09563646,
+        0.1534677 , 0.1256557 , 0.0715919 , 0.18901005, 0.1056242 ,
+        0.05243945, 0.07458849, 0.12125907, 0.18711953, 0.16648598,
+        0.15064607, 0.14142981, 0.05725875, 0.05720367, 0.09707842,
+        0.1590744 , 0.09533873, 0.03028126, 0.16623855, 0.09705191,
+        0.04594946, 0.04937363, 0.057166  , 0.04884648, 0.04645796,
+        0.04714236, 0.05767322, 0.06169963, 0.05029526, 0.07357755,
+        0.12273636, 0.17219052, 0.21507115, 0.07772574, 0.06723671,
+        0.06971755, 0.03618331, 0.11453705, 0.0828012 , 0.052565  ,
+        0.04075003, 0.06917429, 0.03800168, 0.02903128, 0.04464211]),
+ 'std_fit_time': array([0.0130502 , 0.00150572, 0.00351049, 0.00085295, 0.00556468,
+        0.00072124, 0.00154775, 0.03262192, 0.04423362, 0.00686723,
+        0.01702715, 0.00085015, 0.00160622, 0.00437725, 0.00081553,
+        0.00137447, 0.03906127, 0.03770145, 0.04640234, 0.03308486,
+        0.02444167, 0.00066405, 0.00203224, 0.00109217, 0.00211298,
+        0.02785865, 0.02077187, 0.00209725, 0.02877533, 0.00944296,
+        0.02418262, 0.00596141, 0.0088244 , 0.04125813, 0.05312122,
+        0.00592072, 0.00529813, 0.06404498, 0.04821956, 0.00352225,
+        0.00545726, 0.00119779, 0.00432975, 0.00897549, 0.03621896,
+        0.00663662, 0.04026649, 0.01806003, 0.00800145, 0.02527592,
+        0.00141539, 0.00067884, 0.0115654 , 0.02713007, 0.03735149,
+        0.07601057, 0.06082079, 0.02623569, 0.01858502, 0.04912508,
+        0.03045958, 0.01764551, 0.03202565, 0.05291999, 0.06493917,
+        0.07761524, 0.04686397, 0.028062  , 0.02313129, 0.06352573,
+        0.0277892 , 0.04518484, 0.00824588, 0.06856544, 0.06769981,
+        0.00295142, 0.00822047, 0.01076871, 0.00894598, 0.0042838 ,
+        0.01289007, 0.01067814, 0.03313358, 0.00685171, 0.04059978,
+        0.05502337, 0.08365106, 0.06110975, 0.0280322 , 0.02072371,
+        0.0413184 , 0.01468907, 0.04048819, 0.0509084 , 0.00882215,
+        0.00144608, 0.0381809 , 0.0184454 , 0.00624935, 0.01191802]),
+ 'mean_score_time': array([0.01041026, 0.0110384 , 0.01054683, 0.00948648, 0.01021957,
+        0.01008606, 0.01053996, 0.01813369, 0.01664   , 0.01580949,
+        0.01097374, 0.00927558, 0.00994048, 0.01008301, 0.01033173,
+        0.00977769, 0.01133156, 0.01760058, 0.0122767 , 0.0151742 ,
+        0.0141542 , 0.0096447 , 0.0118144 , 0.01045394, 0.00964875,
+        0.01468349, 0.01308846, 0.01713934, 0.01674247, 0.01314273,
+        0.01233449, 0.01430483, 0.01429071, 0.02017918, 0.0220099 ,
+        0.03405471, 0.03004112, 0.0275342 , 0.02363153, 0.01298537,
+        0.01151652, 0.00959706, 0.01140733, 0.0147366 , 0.01578889,
+        0.01465583, 0.0169621 , 0.01913338, 0.01307931, 0.01300941,
+        0.01155334, 0.01007495, 0.0209445 , 0.03101969, 0.0276083 ,
+        0.03710308, 0.03850188, 0.02593832, 0.0335506 , 0.02997804,
+        0.01656728, 0.02695947, 0.03461595, 0.03931494, 0.0564281 ,
+        0.0377295 , 0.03540735, 0.02975602, 0.03089757, 0.02792363,
+        0.0369616 , 0.02568774, 0.01317277, 0.02977576, 0.02447515,
+        0.02212262, 0.02314773, 0.02580161, 0.02305565, 0.0273797 ,
+        0.02924337, 0.03408251, 0.03659582, 0.03971982, 0.0345645 ,
+        0.03132882, 0.04570541, 0.05026045, 0.03325148, 0.03239684,
+        0.01919398, 0.01872749, 0.03428893, 0.02841263, 0.02503195,
+        0.02151237, 0.01544561, 0.0184629 , 0.01828718, 0.02217169]),
+ 'std_score_time': array([0.00070636, 0.00123777, 0.00212519, 0.00059177, 0.00210665,
+        0.00063357, 0.00044519, 0.00338154, 0.00414195, 0.00340315,
+        0.00317816, 0.00041323, 0.0007185 , 0.00136622, 0.00136239,
+        0.0004678 , 0.00199756, 0.00546097, 0.00266909, 0.00366338,
+        0.00832446, 0.00039829, 0.00150755, 0.00052468, 0.00044303,
+        0.0040563 , 0.0030029 , 0.00644931, 0.00335442, 0.00508518,
+        0.00241337, 0.00411905, 0.00465976, 0.0083905 , 0.00482   ,
+        0.00784051, 0.00336177, 0.00880671, 0.00793042, 0.00199701,
+        0.00337367, 0.00014722, 0.00233403, 0.00369263, 0.00292952,
+        0.00525711, 0.00830019, 0.00349135, 0.00363417, 0.00157097,
+        0.00078131, 0.00060929, 0.00472856, 0.00972391, 0.00254114,
+        0.01912506, 0.01523059, 0.00490876, 0.00696207, 0.00581808,
+        0.00635502, 0.00535289, 0.01174496, 0.01474969, 0.01309583,
+        0.01706959, 0.00606904, 0.00859501, 0.00820023, 0.01005814,
+        0.00922279, 0.01066017, 0.00401929, 0.00910809, 0.01042617,
+        0.00540987, 0.00163354, 0.0043616 , 0.001057  , 0.00606327,
+        0.00474366, 0.00586299, 0.0085518 , 0.01404924, 0.01336471,
+        0.01108081, 0.01406963, 0.00453315, 0.0051487 , 0.01242977,
+        0.00813353, 0.0094319 , 0.00581917, 0.01061886, 0.00367565,
+        0.0014981 , 0.00341047, 0.00465135, 0.00757031, 0.00183095]),
+ 'param_preprocessing__polynomial_rooms__degree': masked_array(data=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
+                    2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4,
+                    4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6,
+                    6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8,
+                    8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                    10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+              mask=[False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False],
+        fill_value=999999),
+ 'param_preprocessing__polynomial_sqft__degree': masked_array(data=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8,
+                    9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6,
+                    7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4,
+                    5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2,
+                    3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+              mask=[False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False, False, False, False, False,
+                    False, False, False, False],
+        fill_value=999999),
+ 'params': [{'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 1,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 2,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 3,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 4,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 5,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 6,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 7,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 8,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 9,
+   'preprocessing__polynomial_sqft__degree': 10},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 1},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 2},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 3},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 4},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 5},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 6},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 7},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 8},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 9},
+  {'preprocessing__polynomial_rooms__degree': 10,
+   'preprocessing__polynomial_sqft__degree': 10}],
+ 'split0_test_score': array([0.53197809, 0.53171602, 0.54522368, 0.54342647, 0.50847886,
+        0.50803388, 0.50404865, 0.4882476 , 0.45353316, 0.40231932,
+        0.52048972, 0.52917544, 0.53567011, 0.53568012, 0.50847886,
+        0.50803388, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.5242219 , 0.53081818, 0.53590894, 0.53603518, 0.50157112,
+        0.50803388, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.53184271, 0.53758574, 0.53945893, 0.53871973, 0.50037313,
+        0.50803388, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.5319609 , 0.53735141, 0.53930069, 0.53866462, 0.50052211,
+        0.50803388, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.53190067, 0.53745662, 0.53938494, 0.5387824 , 0.50565462,
+        0.50164707, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.53133617, 0.53727551, 0.54040974, 0.53917085, 0.50525069,
+        0.50358826, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.53065114, 0.53658738, 0.54022424, 0.53989785, 0.50604412,
+        0.49771484, 0.50404865, 0.4882476 , 0.45353317, 0.40231933,
+        0.53099301, 0.536678  , 0.54059708, 0.53931236, 0.50739375,
+        0.49827708, 0.50404864, 0.4882476 , 0.45353317, 0.40231936,
+        0.53012526, 0.53588319, 0.53997508, 0.53980828, 0.50734457,
+        0.50007678, 0.50375312, 0.4882476 , 0.45353311, 0.40231936]),
+ 'split1_test_score': array([0.53225302, 0.52618888, 0.53488419, 0.53517255, 0.45451042,
+        0.45231332, 0.44389116, 0.422262  , 0.38464169, 0.33731011,
+        0.53730671, 0.51997812, 0.53893103, 0.53782121, 0.45451042,
+        0.45231332, 0.44389116, 0.42226201, 0.38464169, 0.33731011,
+        0.5354238 , 0.52445722, 0.53895206, 0.53749267, 0.49887576,
+        0.45231332, 0.44389117, 0.42226201, 0.38464169, 0.33731011,
+        0.53544608, 0.52151401, 0.53586829, 0.53487876, 0.4983378 ,
+        0.45231332, 0.44389117, 0.42226201, 0.38464169, 0.33731011,
+        0.53500045, 0.52031442, 0.53451755, 0.53353239, 0.49889726,
+        0.45231332, 0.44389117, 0.42226201, 0.38464169, 0.33731011,
+        0.53504   , 0.5213231 , 0.53534432, 0.53374224, 0.49114762,
+        0.49100069, 0.44389117, 0.42226201, 0.38464169, 0.33731011,
+        0.53405576, 0.52000604, 0.53313161, 0.53401356, 0.48943155,
+        0.48652811, 0.44389117, 0.42226201, 0.38464169, 0.33731011,
+        0.53534435, 0.52030135, 0.53172175, 0.53046811, 0.4917566 ,
+        0.49273108, 0.44389116, 0.42226201, 0.38464169, 0.33731011,
+        0.53255867, 0.52045329, 0.5318881 , 0.5302316 , 0.49245965,
+        0.4899853 , 0.44389113, 0.42226201, 0.38464169, 0.33731019,
+        0.51743414, 0.50853849, 0.52381455, 0.53062804, 0.49127563,
+        0.48670139, 0.47003583, 0.42226201, 0.38464173, 0.33731019]),
+ 'split2_test_score': array([ 4.28295335e-01,  4.56095393e-01,  5.12143982e-01,  4.61103016e-01,
+         1.73388206e-01, -3.94185105e-01, -1.67096383e+00, -4.78706813e+00,
+        -1.26045758e+01, -3.20376326e+01,  4.34384984e-01,  4.51860030e-01,
+         5.12220914e-01,  4.70697875e-01,  1.73388200e-01, -3.94185105e-01,
+        -1.67096394e+00, -4.78706839e+00, -1.26045732e+01, -3.20376543e+01,
+         4.37847834e-01,  4.43445488e-01,  5.04808050e-01,  4.79705754e-01,
+         3.49152801e-01, -3.94185105e-01, -1.67096421e+00, -4.78706796e+00,
+        -1.26045732e+01, -3.20376543e+01,  4.22601291e-01,  4.18640590e-01,
+         4.72190092e-01,  4.99988029e-01,  3.26404787e-01, -3.94185099e-01,
+        -1.67096424e+00, -4.78706796e+00, -1.26045732e+01, -3.20376543e+01,
+         4.19178646e-01,  4.09008772e-01,  4.63062060e-01,  4.99740261e-01,
+         3.18006452e-01, -3.94185115e-01, -1.67096424e+00, -4.78706796e+00,
+        -1.26045732e+01, -3.20376543e+01,  4.19085877e-01,  4.09765911e-01,
+         4.66764465e-01,  4.98972379e-01,  4.36701498e-01,  2.77506912e-01,
+        -1.67096424e+00, -4.78706796e+00, -1.26045732e+01, -3.20376543e+01,
+         4.19064840e-01,  4.09793878e-01,  4.72076189e-01,  4.85644115e-01,
+         4.54114367e-01,  3.12566630e-01, -1.67096425e+00, -4.78706796e+00,
+        -1.26045732e+01, -3.20376543e+01,  4.19415299e-01,  4.09770611e-01,
+         4.69447188e-01,  4.80578263e-01,  1.90095508e-01, -3.76854799e-01,
+        -1.67096359e+00, -4.78706796e+00, -1.26045732e+01, -3.20376543e+01,
+         4.21259343e-01,  4.11189137e-01,  4.70212003e-01,  4.81701109e-01,
+        -5.34160552e-02, -5.21517437e-01, -3.44805181e-03, -4.78706796e+00,
+        -1.26045732e+01, -3.20377100e+01,  4.21475196e-01,  4.11559288e-01,
+         4.70248203e-01,  4.86300301e-01, -1.43811545e-01, -1.64237161e-01,
+        -3.58635104e-02, -4.78706796e+00, -1.26045731e+01, -3.20377100e+01]),
+ 'split3_test_score': array([ 5.65747933e-01,  5.82384226e-01,  5.92700786e-01,  5.98214294e-01,
+         5.47422750e-01,  5.32731294e-01,  3.13703538e-01, -1.49590875e+00,
+        -1.14656661e+01, -5.01073645e+01,  5.71443248e-01,  5.75605343e-01,
+         5.95944663e-01,  6.00612298e-01,  5.47422750e-01,  5.32731294e-01,
+         3.13703538e-01, -1.49591548e+00, -1.14656489e+01, -5.01073552e+01,
+         5.88074536e-01,  5.83533300e-01,  5.90476903e-01,  5.94592319e-01,
+         5.78127362e-01,  5.32731294e-01,  3.13703396e-01, -1.49591484e+00,
+        -1.14656489e+01, -5.01073552e+01,  6.15356800e-01,  6.03073637e-01,
+         6.00342991e-01,  6.03091376e-01,  5.65131147e-01,  5.32731294e-01,
+         3.13703529e-01, -1.49591484e+00, -1.14656489e+01, -5.01073552e+01,
+         6.16704667e-01,  5.89473109e-01,  5.92295971e-01,  6.02336768e-01,
+         5.50867734e-01,  5.32731293e-01,  3.13703529e-01, -1.49591484e+00,
+        -1.14656489e+01, -5.01073552e+01,  5.85729787e-01,  6.02705181e-01,
+         5.80443212e-01,  5.86562156e-01,  5.75918797e-01,  5.80253287e-01,
+         3.13703529e-01, -1.49591484e+00, -1.14656489e+01, -5.01073552e+01,
+        -1.68548642e+00, -2.99315878e-01,  9.10989927e-02,  6.02644267e-01,
+         5.38009452e-01,  5.77098812e-01,  3.13703529e-01, -1.49591484e+00,
+        -1.14656489e+01, -5.01073552e+01, -7.53704627e+00, -2.94565107e+00,
+         2.35111174e-03, -7.65029225e-01,  3.89359044e-01,  3.65147885e-01,
+         3.13703527e-01, -1.49591484e+00, -1.14656489e+01, -5.01073552e+01,
+        -7.35541617e-01,  3.93171854e-01, -7.37209446e+00, -1.96164663e+00,
+         5.47622014e-01,  2.46906535e-01,  3.13703620e-01, -1.49591484e+00,
+        -1.14656489e+01, -5.01114112e+01, -9.23176261e+02, -9.49419073e+02,
+        -1.98181862e+03, -2.72115419e+00,  7.90677174e-02, -1.14293665e+00,
+         4.99621262e-01, -1.49591484e+00, -1.14656778e+01, -5.01114112e+01]),
+ 'split4_test_score': array([0.60613781, 0.59097517, 0.60325041, 0.60828193, 0.57550038,
+        0.5702938 , 0.55592937, 0.53199328, 0.50402511, 0.46569119,
+        0.59828957, 0.59121783, 0.60151957, 0.60597791, 0.57550038,
+        0.5702938 , 0.55592937, 0.53199329, 0.50402511, 0.46569119,
+        0.59405278, 0.58841648, 0.60004929, 0.60531194, 0.59831186,
+        0.5702938 , 0.55592937, 0.5319933 , 0.50402511, 0.46569119,
+        0.60239686, 0.59627402, 0.60410185, 0.60798265, 0.59332899,
+        0.5702938 , 0.55592937, 0.5319933 , 0.50402511, 0.46569119,
+        0.60248625, 0.59518882, 0.60357001, 0.6077937 , 0.59517704,
+        0.5702938 , 0.55592937, 0.5319933 , 0.50402511, 0.46569119,
+        0.60255496, 0.59531701, 0.60391649, 0.60759492, 0.60274906,
+        0.58205774, 0.55592937, 0.5319933 , 0.50402511, 0.46569119,
+        0.60137637, 0.59473349, 0.60528087, 0.60836085, 0.60245951,
+        0.57970184, 0.55592937, 0.5319933 , 0.50402511, 0.46569119,
+        0.60019991, 0.59380085, 0.60476942, 0.60867404, 0.60202309,
+        0.58127184, 0.55592936, 0.5319933 , 0.50402511, 0.46569119,
+        0.60150623, 0.59488935, 0.60575151, 0.60838892, 0.60374457,
+        0.57843238, 0.55592936, 0.5319933 , 0.50402511, 0.46569123,
+        0.60120897, 0.59481447, 0.60480136, 0.60911815, 0.60362812,
+        0.59049235, 0.56298294, 0.5319933 , 0.50402511, 0.46569123]),
+ 'mean_test_score': array([ 5.32882439e-01,  5.37471938e-01,  5.57640609e-01,  5.49239651e-01,
+         4.51860123e-01,  3.33837438e-01,  2.93217770e-02, -9.68094802e-01,
+        -4.54560839e+00, -1.61879353e+01,  5.32382847e-01,  5.33567353e-01,
+         5.56857257e-01,  5.50157883e-01,  4.51860121e-01,  3.33837438e-01,
+         2.93217540e-02, -9.68096194e-01, -4.54560441e+00, -1.61879378e+01,
+         5.35924169e-01,  5.34134134e-01,  5.54039049e-01,  5.50627573e-01,
+         5.05207779e-01,  3.33837438e-01,  2.93216723e-02, -9.68095979e-01,
+        -4.54560441e+00, -1.61879378e+01,  5.41528749e-01,  5.35417599e-01,
+         5.50392432e-01,  5.56932107e-01,  4.96715171e-01,  3.33837440e-01,
+         2.93216921e-02, -9.68095979e-01, -4.54560441e+00, -1.61879378e+01,
+         5.41066183e-01,  5.30267305e-01,  5.46549255e-01,  5.56413549e-01,
+         4.92694119e-01,  3.33837437e-01,  2.93216921e-02, -9.68095979e-01,
+        -4.54560441e+00, -1.61879378e+01,  5.34862257e-01,  5.33313563e-01,
+         5.45170683e-01,  5.53130817e-01,  5.22434318e-01,  4.86493139e-01,
+         2.93216921e-02, -9.68095979e-01, -4.54560441e+00, -1.61879378e+01,
+         8.00693445e-02,  3.52498608e-01,  4.48399480e-01,  5.53966728e-01,
+         5.17853114e-01,  4.91896729e-01,  2.93216920e-02, -9.68095979e-01,
+        -4.54560441e+00, -1.61879378e+01, -1.09028712e+00, -1.77038175e-01,
+         4.29702742e-01,  2.78917809e-01,  4.35855673e-01,  3.12002168e-01,
+         2.93218229e-02, -9.68095979e-01, -4.54560441e+00, -1.61879378e+01,
+         2.70155128e-01,  4.91276328e-01, -1.04472915e+00,  3.95974718e-02,
+         4.19560785e-01,  2.58416770e-01,  3.62824939e-01, -9.68095979e-01,
+        -4.54560441e+00, -1.61887601e+01, -1.84221203e+02, -1.89473656e+02,
+        -3.95935956e+02, -1.11059883e-01,  3.07500900e-01,  5.40193414e-02,
+         4.00105929e-01, -9.68095980e-01, -4.54561019e+00, -1.61887601e+01]),
+ 'std_test_score': array([5.89680705e-02, 4.82955255e-02, 3.47892162e-02, 5.26958237e-02,
+        1.45036853e-01, 3.66024080e-01, 8.53978109e-01, 2.05754389e+00,
+        6.12587520e+00, 2.11064168e+01, 5.59261703e-02, 4.89301804e-02,
+        3.54547473e-02, 4.96733641e-02, 1.45036855e-01, 3.66024080e-01,
+        8.53978155e-01, 2.05754433e+00, 6.12587062e+00, 2.11064170e+01,
+        5.63112009e-02, 5.23754136e-02, 3.58459737e-02, 4.54722912e-02,
+        8.76266065e-02, 3.66024080e-01, 8.53978252e-01, 2.05754414e+00,
+        6.12587062e+00, 2.11064170e+01, 6.84544620e-02, 6.65067275e-02,
+        4.86330306e-02, 4.19464065e-02, 9.27756606e-02, 3.66024078e-01,
+        8.53978274e-01, 2.05754414e+00, 6.12587062e+00, 2.11064170e+01,
+        6.99569522e-02, 6.71907829e-02, 5.00230831e-02, 4.19506739e-02,
+        9.43424155e-02, 3.66024084e-01, 8.53978274e-01, 2.05754414e+00,
+        6.12587062e+00, 2.11064170e+01, 6.41603923e-02, 6.94040085e-02,
+        4.68461058e-02, 3.89844150e-02, 5.98691562e-02, 1.11219388e-01,
+        8.53978274e-01, 2.05754414e+00, 6.12587062e+00, 2.11064170e+01,
+        8.84715945e-01, 3.31368029e-01, 1.83565474e-01, 4.60722248e-02,
+        5.01871578e-02, 9.72562904e-02, 8.53978275e-01, 2.05754414e+00,
+        6.12587062e+00, 2.11064170e+01, 3.22390353e+00, 1.38559002e+00,
+        2.17935888e-01, 5.23568459e-01, 1.40159151e-01, 3.51285263e-01,
+        8.53978012e-01, 2.05754414e+00, 6.12587062e+00, 2.11064170e+01,
+        5.06150965e-01, 7.70541530e-02, 3.16397428e+00, 1.00143837e+00,
+        2.39607725e-01, 4.05461908e-01, 2.00186906e-01, 2.05754414e+00,
+        6.12587062e+00, 2.11077291e+01, 3.69477533e+02, 3.79972713e+02,
+        7.92941332e+02, 1.30564012e+00, 2.88882889e-01, 6.56402900e-01,
+        2.20061131e-01, 2.05754415e+00, 6.12587714e+00, 2.11077291e+01]),
+ 'rank_test_score': array([ 23,  16,   1,  11,  34,  46,  57,  66,  86,  88,  24,  21,   3,
+         10,  35,  45,  58,  75,  78,  89,  17,  20,   5,   8,  28,  44,
+         63,  72,  85,  90,  14,  18,   9,   2,  29,  43,  61,  69,  81,
+         90,  15,  25,  12,   4,  30,  47,  60,  70,  81,  90,  19,  22,
+         13,   7,  26,  33,  59,  71,  81,  90,  53,  42,  36,   6,  27,
+         31,  62,  67,  81,  90,  77,  65,  38,  50,  37,  48,  56,  68,
+         80,  90,  51,  32,  76,  55,  39,  52,  41,  73,  79,  96,  98,
+         99, 100,  64,  49,  54,  40,  74,  87,  96], dtype=int32)}</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-outputid="2b4ade09-9ebb-4baa-e056-2bbd6e8e69a6" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>gscv_fitted.cv_results_[<span class="st">'params'</span>]</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>params_df <span class="op">=</span> pd.DataFrame(gscv_fitted.cv_results_[<span class="st">'params'</span>])</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>params_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="62">
+
+  <div id="df-bf43870f-4ee4-4d08-83e2-87907d84b22d" class="colab-df-container">
+    <div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">preprocessing__polynomial_rooms__degree</th>
+<th data-quarto-table-cell-role="th">preprocessing__polynomial_sqft__degree</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>1</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">95</td>
+<td>10</td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">96</td>
+<td>10</td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">97</td>
+<td>10</td>
+<td>8</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">98</td>
+<td>10</td>
+<td>9</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">99</td>
+<td>10</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+
+<p>100 rows × 2 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-bf43870f-4ee4-4d08-83e2-87907d84b22d')" title="Convert this dataframe to an interactive table." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-bf43870f-4ee4-4d08-83e2-87907d84b22d button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-bf43870f-4ee4-4d08-83e2-87907d84b22d');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-b9a39dc3-0db1-47aa-84bf-b621591b1276">
+  <button class="colab-df-quickchart" onclick="quickchart('df-b9a39dc3-0db1-47aa-84bf-b621591b1276')" title="Suggest charts" style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-b9a39dc3-0db1-47aa-84bf-b621591b1276 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+
+  <div id="id_29a28552-6b02-4e2d-b89e-24dd9a58fd4a">
+    <style>
+      .colab-df-generate {
+        background-color: #E8F0FE;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: none;
+        fill: #1967D2;
+        height: 32px;
+        padding: 0 0 0 0;
+        width: 32px;
+      }
+
+      .colab-df-generate:hover {
+        background-color: #E2EBFA;
+        box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+        fill: #174EA6;
+      }
+
+      [theme=dark] .colab-df-generate {
+        background-color: #3B4455;
+        fill: #D2E3FC;
+      }
+
+      [theme=dark] .colab-df-generate:hover {
+        background-color: #434B5C;
+        box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+        filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+        fill: #FFFFFF;
+      }
+    </style>
+    <button class="colab-df-generate" onclick="generateWithVariable('params_df')" title="Generate code using this dataframe." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <path d="M7,19H8.4L18.45,9,17,7.55,7,17.6ZM5,21V16.75L18.45,3.32a2,2,0,0,1,2.83,0l1.4,1.43a1.91,1.91,0,0,1,.58,1.4,1.91,1.91,0,0,1-.58,1.4L9.25,21ZM18.45,9,17,7.55Zm-12,3A5.31,5.31,0,0,0,4.9,8.1,5.31,5.31,0,0,0,1,6.5,5.31,5.31,0,0,0,4.9,4.9,5.31,5.31,0,0,0,6.5,1,5.31,5.31,0,0,0,8.1,4.9,5.31,5.31,0,0,0,12,6.5,5.46,5.46,0,0,0,6.5,12Z"></path>
+  </svg>
+    </button>
+    <script>
+      (() => {
+      const buttonEl =
+        document.querySelector('#id_29a28552-6b02-4e2d-b89e-24dd9a58fd4a button.colab-df-generate');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      buttonEl.onclick = () => {
+        google.colab.notebook.generateWithVariable('params_df');
+      }
+      })();
+    </script>
+  </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="cell-19" class="cell" data-outputid="143dcced-c9bb-4a76-bb0b-fe7f579bbbaa" data-execution_count="63">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>results_df <span class="op">=</span> params_df.assign(score <span class="op">=</span> gscv_fitted.cv_results_[<span class="st">'mean_test_score'</span>])</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>results_df.sort_values(by <span class="op">=</span> <span class="st">'score'</span>, ascending <span class="op">=</span> <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="63">
+
+  <div id="df-bd8980ef-eb5c-43c7-8147-e5ac89892fd9" class="colab-df-container">
+    <div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">preprocessing__polynomial_rooms__degree</th>
+<th data-quarto-table-cell-role="th">preprocessing__polynomial_sqft__degree</th>
+<th data-quarto-table-cell-role="th">score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1</td>
+<td>3</td>
+<td>0.557641</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">33</td>
+<td>4</td>
+<td>4</td>
+<td>0.556932</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>2</td>
+<td>3</td>
+<td>0.556857</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">43</td>
+<td>5</td>
+<td>4</td>
+<td>0.556414</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>3</td>
+<td>3</td>
+<td>0.554039</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">89</td>
+<td>9</td>
+<td>10</td>
+<td>-16.188760</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">99</td>
+<td>10</td>
+<td>10</td>
+<td>-16.188760</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">90</td>
+<td>10</td>
+<td>1</td>
+<td>-184.221203</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">91</td>
+<td>10</td>
+<td>2</td>
+<td>-189.473656</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">92</td>
+<td>10</td>
+<td>3</td>
+<td>-395.935956</td>
+</tr>
+</tbody>
+</table>
+
+<p>100 rows × 3 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-bd8980ef-eb5c-43c7-8147-e5ac89892fd9')" title="Convert this dataframe to an interactive table." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-bd8980ef-eb5c-43c7-8147-e5ac89892fd9 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-bd8980ef-eb5c-43c7-8147-e5ac89892fd9');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-553c7dbe-243a-4598-8e28-ce7b140dde36">
+  <button class="colab-df-quickchart" onclick="quickchart('df-553c7dbe-243a-4598-8e28-ce7b140dde36')" title="Suggest charts" style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-553c7dbe-243a-4598-8e28-ce7b140dde36 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
