@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>pa7_2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="PA7_2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="PA7_2_files/libs/quarto-html/quarto.js"></script>
+<script src="PA7_2_files/libs/quarto-html/popper.min.js"></script>
+<script src="PA7_2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="PA7_2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="PA7_2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="PA7_2_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="PA7_2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="PA7_2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="PA7_2_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<div id="cell-0" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.compose <span class="im">import</span> make_column_selector, ColumnTransformer</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler, OneHotEncoder, PolynomialFeatures</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression, Ridge, Lasso, ElasticNet</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split, cross_val_score</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> r2_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-1" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the data</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ames <span class="op">=</span> pd.read_csv(<span class="st">"AmesHousing.csv"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Get rid of columns with mostly NaN values</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>good_cols <span class="op">=</span> ames.isna().<span class="bu">sum</span>() <span class="op">&lt;</span> <span class="dv">100</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>ames <span class="op">=</span> ames.loc[:,good_cols]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop other NAs</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ames <span class="op">=</span> ames.dropna()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-2" class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> ames.drop([<span class="st">"SalePrice"</span>, <span class="st">"Order"</span>, <span class="st">"PID"</span>], axis <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> ames[<span class="st">"SalePrice"</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>, handle_unknown<span class="op">=</span><span class="st">'ignore'</span>),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span><span class="bu">object</span>)),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    StandardScaler(),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span>np.number))</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"passthrough"</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>lr_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"linear_regression"</span>, LinearRegression())]</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-3" class="cell" data-outputid="b3f7e4b4-35c2-4f70-acff-5b2ac5f35fc9" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cross_val_score(lr_pipeline_1, X, y, cv <span class="op">=</span> <span class="dv">5</span>, scoring <span class="op">=</span> <span class="st">'r2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>array([-2.59303720e+21, -1.13145211e+19, -7.57138616e+20, -4.47669752e+18,
+       -2.55949915e+20])</code></pre>
+</div>
+</div>
+<div id="cell-4" class="cell" data-outputid="dc08f4d5-4ea2-4195-a02b-bbd932a32252" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#fit best model and find coeff</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>best_model1 <span class="op">=</span> lr_pipeline_1.fit(X, y)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>best_model1.named_steps[<span class="st">'linear_regression'</span>].coef_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<pre><code>array([-2.24179963e+13, -2.24179963e+13, -2.24179963e+13, -2.24179963e+13,
+       -2.24179963e+13, -2.24179963e+13,  8.77445489e+16,  8.77445489e+16,
+       -5.69655063e+16, -5.69655063e+16, -5.69655063e+16, -5.69655063e+16,
+       -7.15659594e+16, -7.15659594e+16, -7.15659594e+16, -7.15659594e+16,
+       -1.51538003e+15, -1.51538003e+15, -1.51538003e+15, -9.19114245e+16,
+       -9.19114245e+16, -9.19114245e+16, -9.19114245e+16, -9.19114245e+16,
+        1.15456556e+17,  1.15456556e+17,  1.15456556e+17,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15,  7.79072920e+15,
+        7.79072920e+15,  7.79072920e+15,  7.79072920e+15, -4.12026339e+15,
+       -4.12026339e+15, -4.12026339e+15, -4.12026339e+15, -4.12026339e+15,
+       -4.12026339e+15, -4.12026339e+15, -4.12026339e+15, -4.12026339e+15,
+       -3.61295946e+15, -3.61295946e+15, -3.61295946e+15, -3.61295946e+15,
+       -3.61295946e+15, -3.61295946e+15, -3.61295946e+15, -3.61295946e+15,
+       -5.25377588e+16, -5.25377588e+16, -5.25377588e+16, -5.25377588e+16,
+       -5.25377588e+16, -1.52090205e+16, -1.52090205e+16, -1.52090205e+16,
+       -1.52090205e+16, -1.52090205e+16, -1.52090205e+16, -1.52090205e+16,
+       -1.52090205e+16,  1.91691533e+16,  1.91691533e+16,  1.91691533e+16,
+        1.91691533e+16,  1.91691533e+16,  1.91691533e+16, -4.50114799e+15,
+       -4.50114799e+15, -4.50114799e+15, -4.50114799e+15, -4.50114799e+15,
+       -4.50114799e+15, -4.50114799e+15, -4.50114799e+15,  3.34897891e+15,
+        3.34897891e+15,  3.34897891e+15,  3.34897891e+15,  1.47014712e+16,
+        3.34897891e+15,  3.34897891e+15,  3.34897891e+15,  3.34897891e+15,
+        3.34897891e+15,  7.53603271e+15,  3.34897891e+15,  3.34897891e+15,
+        3.34897891e+15,  3.34897891e+15,  3.34897891e+15,  1.27139454e+16,
+        1.27139454e+16,  1.27139454e+16,  1.27139454e+16,  1.36145308e+15,
+        1.27139454e+16,  1.27139454e+16,  1.27139454e+16,  1.27139454e+16,
+        1.27139454e+16,  1.27139454e+16,  8.52689156e+15,  1.27139454e+16,
+        1.27139454e+16,  1.27139454e+16,  1.27139454e+16,  1.27139454e+16,
+       -3.32233033e+16, -3.32233033e+16, -3.32233033e+16, -3.32233033e+16,
+       -9.15966848e+15, -9.15966848e+15, -9.15966848e+15, -9.15966848e+15,
+       -9.15966848e+15,  3.79427899e+14,  3.79427899e+14,  3.79427899e+14,
+        3.79427899e+14,  3.79427899e+14,  2.71677095e+16,  2.71677095e+16,
+        2.71677095e+16,  2.71677095e+16,  2.71677095e+16,  6.51060367e+15,
+        6.51060367e+15,  6.51060367e+15,  6.51060367e+15,  6.51060367e+15,
+       -1.65866139e+16, -1.65866139e+16, -1.65866139e+16, -1.65866139e+16,
+        1.60814863e+15,  1.60814863e+15,  1.60814863e+15,  1.60814863e+15,
+        1.60814863e+15,  1.60814863e+15,  8.23467493e+15,  8.23467493e+15,
+        8.23467493e+15,  8.23467493e+15,  8.23467493e+15,  8.23467493e+15,
+       -9.45500313e+14, -9.45500313e+14, -9.45500313e+14, -9.45500313e+14,
+        9.55568976e+15,  9.55568976e+15,  9.55568976e+15,  9.55568976e+15,
+        9.55568976e+15,  3.33853449e+15,  3.33853449e+15, -2.09563505e+15,
+       -2.09563505e+15, -2.09563505e+15, -2.09563505e+15, -2.09563505e+15,
+        1.86900970e+16,  1.86900970e+16,  1.86900970e+16,  1.86900970e+16,
+        1.86900970e+16,  3.16274395e+15,  3.16274395e+15,  3.16274395e+15,
+        3.16274395e+15,  3.16274395e+15,  3.16274395e+15,  3.16274395e+15,
+        3.16274395e+15,  1.12983164e+17,  1.12983164e+17,  1.12983164e+17,
+       -3.55618268e+15, -3.55618268e+15, -3.55618268e+15, -3.55618268e+15,
+       -3.55618268e+15, -3.55618268e+15, -3.55618268e+15, -3.55618268e+15,
+       -3.55618268e+15, -3.55618268e+15, -2.09801882e+16, -2.09801882e+16,
+       -2.09801882e+16, -2.09801882e+16, -2.09801882e+16, -2.09801882e+16,
+       -3.19600000e+03,  4.65600000e+03,  1.00280000e+04,  6.32400000e+03,
+        8.79200000e+03,  1.72400000e+03,  2.32000000e+03,  3.09191142e+16,
+        1.16688274e+16,  2.95023650e+16, -2.76872969e+16,  7.10630997e+16,
+        7.82170311e+16,  8.58330680e+15, -9.21485036e+16,  9.68000000e+02,
+       -1.02400000e+03,  2.13600000e+03,  1.17600000e+03, -2.16000000e+03,
+       -2.17600000e+03,  8.00000000e+01,  2.27100000e+03,  2.02400000e+03,
+        3.16800000e+03,  7.68000000e+02, -7.84000000e+02,  3.20000000e+02,
+        4.20000000e+01,  2.72000000e+03,  2.81600000e+03, -5.15200000e+03,
+       -8.16000000e+02, -5.86000000e+02])</code></pre>
+</div>
+</div>
+<p>Practice Activity</p>
+<p>Make a pipeline that uses all the variables in the Ames dataset, and then fits Ridge Regression with</p>
+<p>Cross-validate this pipeline and compare the results to the ordinary linear regression.</p>
+<p>Then fit the model on the whole dataset and get the coefficients. Make a plot of these coefficients compared to the ones from ordinary linear regression</p>
+<div id="cell-6" class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> ames.drop([<span class="st">"SalePrice"</span>, <span class="st">"Order"</span>, <span class="st">"PID"</span>], axis <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> ames[<span class="st">"SalePrice"</span>]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>, handle_unknown<span class="op">=</span><span class="st">'ignore'</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span><span class="bu">object</span>)),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    StandardScaler(),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span>np.number))</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"passthrough"</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>ridge_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"ridge"</span>, Ridge(alpha<span class="op">=</span><span class="dv">1</span>))]</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-7" class="cell" data-outputid="edfab905-62a8-4b7e-ee48-5fd3136d77eb" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cross_val_score(ridge_pipeline_1, X, y, cv <span class="op">=</span> <span class="dv">5</span>, scoring <span class="op">=</span> <span class="st">'r2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>array([0.89815807, 0.91744024, 0.79493606, 0.78522563, 0.91389818])</code></pre>
+</div>
+</div>
+<p>TUNING</p>
+<div id="cell-9" class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> GridSearchCV</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>lambdas <span class="op">=</span> {<span class="st">"ridge__alpha"</span>: [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">100</span>]}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> GridSearchCV(ridge_pipeline_1, lambdas, cv <span class="op">=</span> <span class="dv">5</span>, scoring <span class="op">=</span> <span class="st">'r2'</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>gscv_fitted <span class="op">=</span> grid.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-10" class="cell" data-outputid="804dcc3e-b68e-4f26-d9c5-f5be32e69e3d" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>gscv_fitted.cv_results_[<span class="st">'params'</span>]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>params_df <span class="op">=</span> pd.DataFrame(gscv_fitted.cv_results_[<span class="st">'params'</span>])</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>results_df <span class="op">=</span> params_df.assign(score <span class="op">=</span> gscv_fitted.cv_results_[<span class="st">'mean_test_score'</span>])</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>results_df.sort_values(by <span class="op">=</span> <span class="st">'score'</span>, ascending <span class="op">=</span> <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
+
+  <div id="df-71e2e586-dd63-4bb5-a958-059fc5eae2f9" class="colab-df-container">
+    <div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">ridge__alpha</th>
+<th data-quarto-table-cell-role="th">score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">3</td>
+<td>10.00</td>
+<td>0.864272</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1.00</td>
+<td>0.861932</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>100.00</td>
+<td>0.857773</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.10</td>
+<td>0.856302</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.01</td>
+<td>0.854186</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-71e2e586-dd63-4bb5-a958-059fc5eae2f9')" title="Convert this dataframe to an interactive table." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-71e2e586-dd63-4bb5-a958-059fc5eae2f9 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-71e2e586-dd63-4bb5-a958-059fc5eae2f9');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-9a8d51cd-93eb-4d00-ba05-cd936c45200f">
+  <button class="colab-df-quickchart" onclick="quickchart('df-9a8d51cd-93eb-4d00-ba05-cd936c45200f')" title="Suggest charts" style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-9a8d51cd-93eb-4d00-ba05-cd936c45200f button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="cell-11" class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ridge_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"ridge"</span>, Ridge(alpha<span class="op">=</span><span class="dv">10</span>))]</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>best_model2 <span class="op">=</span> ridge_pipeline_1.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-12" class="cell" data-outputid="dde0780e-56f7-4924-bb08-12b3a1e5b0ff" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>best_model2.named_steps[<span class="st">'ridge'</span>].coef_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="56">
+<pre><code>array([-4.90649460e+03,  2.34694314e+03, -1.22917740e+03,  4.62091189e+03,
+        2.20428500e+03, -3.03646802e+03, -6.17531422e+03,  6.17531422e+03,
+        2.12575125e+03,  7.53147205e+03, -1.22865537e+04,  2.62933036e+03,
+       -1.10363100e+04,  9.09887001e+03, -1.49378054e+03,  3.43122056e+03,
+        2.93687893e+03, -2.42162664e+03, -5.15252289e+02,  1.43157683e+02,
+        7.56730650e+03, -5.62761832e+03, -2.75896133e+03,  6.76115464e+02,
+       -3.78227675e+02,  5.60816320e+03, -5.22993552e+03, -3.76824510e+03,
+        2.45905383e+03,  5.70332014e+03, -6.25300540e+02, -4.25100049e+03,
+       -8.51682634e+03,  9.07661139e+03, -1.55819272e+04, -1.11163614e+04,
+        1.72302347e+03,  1.23832549e+04, -6.48871508e+03, -3.70052362e+02,
+        1.59468710e+03, -1.01764141e+04, -1.10938115e+04,  4.18711022e+03,
+       -1.32553889e+04,  2.75168983e+04,  2.20925274e+04, -9.78994038e+03,
+       -7.01890866e+03, -6.59706874e+03, -8.97446647e+03,  9.31639420e+03,
+        3.08242659e+04, -5.50691247e+03, -3.74580712e+03, -2.09024782e+03,
+       -4.15882068e+03,  5.95150066e+03,  7.86198989e+03,  5.63755552e+03,
+       -5.72715772e+03,  5.79895948e+02, -3.48863215e+03, -4.56608363e+03,
+        1.58213784e+03, -6.81161372e+02,  4.60315253e+02,  1.71248214e+04,
+       -2.38316196e+04,  3.82518685e+03,  7.48096730e+02,  7.72222929e+02,
+        7.80002420e+03,  9.63590728e+03, -1.31048959e+02, -1.09431078e+04,
+       -6.36177473e+03, -2.25720175e+03,  4.35281859e+03,  7.06299725e+03,
+       -3.55828119e+03, -1.47592254e+03, -7.40577624e+03,  5.06667785e+03,
+       -1.78531197e+03, -3.18925850e+03,  1.38552638e+03,  1.88637543e+03,
+        3.17402242e+03, -4.49590735e+03,  1.23924162e+03, -3.93961384e+04,
+        4.81923172e+03,  2.91083574e+03,  2.12001934e+03,  9.71025350e+02,
+        1.32845566e+03, -1.61427250e+03,  2.88608431e+04, -9.91657881e+02,
+        1.48155717e+03,  3.09478907e+03,  1.53258067e+04, -8.95047077e+02,
+        1.30393099e+02, -4.78573894e+03, -2.22622388e+03,  1.21049017e+01,
+       -6.95287080e+02,  6.42293426e+03, -1.35945722e+03, -7.68194976e+03,
+       -4.82070691e+03, -1.32777003e+03, -1.68374647e+03, -2.14412248e+03,
+        2.73832732e+03,  4.92860925e+02, -2.95569496e+03, -8.95047077e+02,
+       -1.87922108e+02,  4.95294873e+02,  6.93761781e+03, -1.07594775e+02,
+       -6.61816732e+02, -2.75504809e+03,  6.42293426e+03, -2.55959490e+03,
+       -4.19765382e+03,  3.72003353e+03, -1.27480150e+03, -3.06777228e+03,
+        1.43507471e+04, -6.72275997e+02, -5.30855790e+03, -8.36991325e+03,
+       -3.25379275e+02, -2.41632895e+03,  1.44466288e+03, -6.25123262e+02,
+        1.92216860e+03, -2.50152689e+03, -1.04286465e+03,  1.95877716e+03,
+        4.54716455e+03, -2.96155017e+03,  1.48550520e+04, -2.92502501e+03,
+       -5.98602580e+03, -7.77091577e+02, -5.16690962e+03, -1.29551376e+03,
+        6.84932142e+02, -1.14577193e+03,  1.64810533e+03,  1.08248222e+02,
+        1.40469674e+03,  1.15487314e+04, -6.23671991e+03, -6.71670824e+03,
+        1.57752933e+03,  4.31511760e+02,  4.58736462e+03, -4.05003108e+03,
+       -1.58577300e+03, -9.60601630e+02,  4.94927060e+03, -2.89823542e+03,
+        4.73883934e+03, -4.16797873e+03, -3.22655405e+03,  6.04658258e+02,
+        2.19424391e+03,  2.53289380e+03,  9.77716879e+02, -5.70485459e+03,
+        2.99225588e+03, -2.04055198e+03,  1.30217937e+03, -2.46227916e+03,
+        2.08395896e+02,  1.19546827e+03, -1.19546827e+03,  1.00094048e+02,
+       -1.03212108e+03,  7.68732872e+02,  3.59129160e+02, -1.95835002e+02,
+        1.67943514e+04, -5.09487664e+03, -5.90752248e+03,  1.15618305e+03,
+       -6.94813535e+03, -3.08569285e+03, -5.19773864e+03,  1.70549026e+03,
+        1.84400630e+03, -3.13147071e+02, -6.57860465e+02, -4.12389611e+03,
+        9.82883857e+03,  3.43083060e+02, -1.08262982e+03,  7.39546762e+02,
+       -6.62970133e+03, -6.68693951e+02,  8.56205141e+03,  2.28667988e+03,
+       -1.83065478e+03, -1.23153676e+03,  2.76382063e+03,  6.65766276e+02,
+       -8.54325119e+02, -3.06340625e+03, -6.87670759e+03,  5.65611299e+03,
+        3.71750642e+03, -4.87991998e+03,  2.99321558e+02,  2.08368661e+03,
+       -4.19282096e+03,  3.55858215e+03,  1.23433686e+04,  5.73295665e+03,
+        7.02575646e+03,  1.70400603e+03,  2.49840830e+03,  3.09768270e+03,
+        1.28032656e+03, -1.29071366e+03,  2.62352839e+03,  7.12545811e+03,
+        1.16770251e+04,  3.94591358e+02,  1.54434008e+04,  2.32016545e+03,
+       -6.12620144e+02,  2.95929820e+03,  1.93345441e+03, -1.78928648e+03,
+       -1.99279510e+03,  1.45376703e+03,  2.90720130e+03,  4.58344512e+03,
+        1.12413499e+03,  1.26683401e+03, -9.16084031e+02,  8.25240406e+02,
+        1.70889021e+02,  3.10470176e+03,  4.89258612e+02, -4.13548806e+03,
+       -6.38220273e+02, -9.77427542e+02])</code></pre>
+</div>
+</div>
+<section id="lasso" class="level2">
+<h2 class="anchored" data-anchor-id="lasso">Lasso</h2>
+<div id="cell-14" class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> ames.drop([<span class="st">"SalePrice"</span>, <span class="st">"Order"</span>, <span class="st">"PID"</span>], axis <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> ames[<span class="st">"SalePrice"</span>]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>, handle_unknown<span class="op">=</span><span class="st">'ignore'</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span><span class="bu">object</span>)),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>,</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    StandardScaler(),</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span>np.number))</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"passthrough"</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>lasso_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"lasso"</span>, Lasso(alpha<span class="op">=</span><span class="dv">1</span>, max_iter <span class="op">=</span> <span class="dv">10000</span>))]</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-15" class="cell" data-outputid="aaf05e70-afb8-4170-e5d1-68a794fd8144" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>lambdas <span class="op">=</span> {<span class="st">"lasso__alpha"</span>: [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">100</span>]}</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> GridSearchCV(lasso_pipeline_1, lambdas, cv <span class="op">=</span> <span class="dv">5</span>, scoring <span class="op">=</span> <span class="st">'r2'</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>grid_fitted <span class="op">=</span> gscv_fitted <span class="op">=</span> grid.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.215e+11, tolerance: 1.348e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.570e+11, tolerance: 1.474e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.585e+11, tolerance: 1.463e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.218e+11, tolerance: 1.407e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.553e+11, tolerance: 1.477e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.013e+09, tolerance: 1.477e+09
+  model = cd_fast.enet_coordinate_descent(</code></pre>
+</div>
+</div>
+<div id="cell-16" class="cell" data-outputid="8bbc2cb1-d885-4fc6-e7a3-6387a30884b0" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>gscv_fitted.cv_results_[<span class="st">'params'</span>]</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>params_df <span class="op">=</span> pd.DataFrame(gscv_fitted.cv_results_[<span class="st">'params'</span>])</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>results_df <span class="op">=</span> params_df.assign(score <span class="op">=</span> gscv_fitted.cv_results_[<span class="st">'mean_test_score'</span>])</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>results_df.sort_values(by <span class="op">=</span> <span class="st">'score'</span>, ascending <span class="op">=</span> <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+
+  <div id="df-9522c05e-0251-44cf-b6ec-9e6aee3b2827" class="colab-df-container">
+    <div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">lasso__alpha</th>
+<th data-quarto-table-cell-role="th">score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>100.00</td>
+<td>0.866931</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>10.00</td>
+<td>0.860632</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1.00</td>
+<td>0.857152</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.10</td>
+<td>0.856618</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.01</td>
+<td>0.855606</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-9522c05e-0251-44cf-b6ec-9e6aee3b2827')" title="Convert this dataframe to an interactive table." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-9522c05e-0251-44cf-b6ec-9e6aee3b2827 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-9522c05e-0251-44cf-b6ec-9e6aee3b2827');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-77521379-a867-407c-8542-d6087dbe225d">
+  <button class="colab-df-quickchart" onclick="quickchart('df-77521379-a867-407c-8542-d6087dbe225d')" title="Suggest charts" style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-77521379-a867-407c-8542-d6087dbe225d button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="cell-17" class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lasso_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"lasso"</span>, Lasso(alpha<span class="op">=</span><span class="dv">100</span>, max_iter <span class="op">=</span> <span class="dv">10000</span>))]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>best_model3 <span class="op">=</span> lasso_pipeline_1.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-18" class="cell" data-outputid="798c94cb-7c9a-4b18-dcae-bb6096395ee0" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>best_model3.named_steps[<span class="st">'lasso'</span>].coef_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<pre><code>array([-0.00000000e+00,  0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+        0.00000000e+00, -3.40179046e+03, -0.00000000e+00,  0.00000000e+00,
+       -0.00000000e+00,  2.91561103e+03, -0.00000000e+00,  0.00000000e+00,
+       -1.02299521e+04,  5.27128450e+03, -0.00000000e+00,  0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        5.35462663e+03, -2.63928711e+03, -0.00000000e+00,  1.77446540e+02,
+       -0.00000000e+00,  2.11317738e+03, -0.00000000e+00,  0.00000000e+00,
+        0.00000000e+00,  0.00000000e+00,  2.14107952e+03,  0.00000000e+00,
+       -0.00000000e+00,  1.41381624e+04, -7.39480667e+03, -1.20939271e+03,
+        0.00000000e+00,  0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -6.88307419e+02, -3.10766828e+03,  0.00000000e+00,
+       -4.43798790e+03,  3.63801042e+04,  2.61893814e+04, -2.59146809e+03,
+       -0.00000000e+00,  0.00000000e+00, -0.00000000e+00,  1.40936035e+04,
+        3.79963928e+04,  0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+       -5.26116157e+02,  6.18676252e+03,  0.00000000e+00,  0.00000000e+00,
+       -0.00000000e+00,  0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+       -1.44197439e+04,  0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+        6.39101110e+03,  8.99758270e+03, -0.00000000e+00, -3.73929817e+02,
+       -0.00000000e+00, -0.00000000e+00,  0.00000000e+00,  2.70465164e+03,
+       -0.00000000e+00,  0.00000000e+00, -2.05258693e+03,  0.00000000e+00,
+       -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+        1.50311537e+03, -0.00000000e+00, -0.00000000e+00, -2.29884742e+05,
+        0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+       -0.00000000e+00, -0.00000000e+00,  2.39413389e+04, -0.00000000e+00,
+        0.00000000e+00,  0.00000000e+00,  1.34293214e+04, -0.00000000e+00,
+        0.00000000e+00, -1.80937496e+03, -0.00000000e+00,  1.96783678e+02,
+       -0.00000000e+00,  0.00000000e+00, -0.00000000e+00, -6.61730961e+02,
+        0.00000000e+00, -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00,  0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00,  0.00000000e+00,  3.02705176e+02,
+       -0.00000000e+00, -1.67150210e+03,  0.00000000e+00, -0.00000000e+00,
+       -0.00000000e+00,  2.35907152e+02, -0.00000000e+00, -0.00000000e+00,
+        2.11686136e+04,  0.00000000e+00, -0.00000000e+00, -2.48038294e+03,
+       -0.00000000e+00, -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00, -0.00000000e+00,  2.22939035e+03,
+        0.00000000e+00, -0.00000000e+00,  2.16416863e+04,  0.00000000e+00,
+       -0.00000000e+00, -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+        4.12347823e+03,  1.46867599e+04, -1.53197445e+03, -3.37920142e+03,
+        2.31536078e+01,  0.00000000e+00,  3.02506204e+03, -9.33738536e+02,
+       -3.97342731e+02, -0.00000000e+00,  0.00000000e+00, -0.00000000e+00,
+        0.00000000e+00, -5.77635177e+02, -0.00000000e+00,  0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00,  0.00000000e+00, -0.00000000e+00,
+        2.08603413e+03, -0.00000000e+00,  0.00000000e+00, -0.00000000e+00,
+       -4.47162942e+01,  0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+       -0.00000000e+00,  0.00000000e+00,  0.00000000e+00, -0.00000000e+00,
+        2.28137464e+04,  0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+       -1.37207304e+03, -0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+        0.00000000e+00, -0.00000000e+00, -0.00000000e+00, -0.00000000e+00,
+        8.93671126e+03, -0.00000000e+00, -0.00000000e+00,  0.00000000e+00,
+       -1.56790446e+03,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+       -0.00000000e+00,  0.00000000e+00,  7.58853576e+03,  0.00000000e+00,
+       -0.00000000e+00, -0.00000000e+00, -6.73982148e+03,  0.00000000e+00,
+        0.00000000e+00, -1.53880987e+01,  0.00000000e+00,  0.00000000e+00,
+       -5.40874122e+03,  3.03464168e+03,  1.22549980e+04,  6.18779549e+03,
+        8.06375122e+03,  1.83249408e+03,  2.37542355e+03,  5.44070184e+03,
+        1.19190870e+03, -0.00000000e+00,  2.72268655e+03,  0.00000000e+00,
+        8.84946221e+02, -7.75650037e+02,  2.59407728e+04,  2.15775117e+03,
+       -7.10487795e+02,  2.30759686e+03,  1.30396942e+03, -1.84114323e+03,
+       -1.69775514e+03,  1.03089125e+03,  2.85109699e+03,  3.35600621e+03,
+        2.24288771e+03,  1.11673375e+03, -6.60358872e+02,  5.94879426e+02,
+        0.00000000e+00,  2.82988606e+03,  7.91915349e+02, -4.32844378e+03,
+       -5.76052919e+02, -7.67372632e+02])</code></pre>
+</div>
+</div>
+</section>
+<section id="elastic-net" class="level2">
+<h2 class="anchored" data-anchor-id="elastic-net">Elastic net</h2>
+<div id="cell-20" class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  [</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"dummify"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    OneHotEncoder(sparse_output <span class="op">=</span> <span class="va">False</span>, handle_unknown<span class="op">=</span><span class="st">'ignore'</span>),</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span><span class="bu">object</span>)),</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"standardize"</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    StandardScaler(),</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    make_column_selector(dtype_include<span class="op">=</span>np.number))</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  remainder <span class="op">=</span> <span class="st">"passthrough"</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>elastic_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"elasticnet"</span>, ElasticNet(alpha<span class="op">=</span><span class="dv">1</span>, l1_ratio<span class="op">=</span><span class="fl">0.5</span>))]</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-21" class="cell" data-outputid="177160a9-8c9b-4005-9120-97aadf86548f" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#iterate through alphas and l1ratio</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>lambdas <span class="op">=</span> {</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"elasticnet__alpha"</span>: [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">100</span>],</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"elasticnet__l1_ratio"</span>: [<span class="fl">0.10</span>, <span class="fl">0.30</span>, <span class="fl">0.5</span>, <span class="fl">0.70</span>,<span class="fl">0.9</span>]</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> GridSearchCV(elastic_pipeline_1, lambdas, cv <span class="op">=</span> <span class="dv">5</span>, scoring <span class="op">=</span> <span class="st">'r2'</span>)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>grid_fitted <span class="op">=</span> gscv_fitted <span class="op">=</span> grid.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.429e+09, tolerance: 1.474e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.015e+10, tolerance: 1.463e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.603e+09, tolerance: 1.407e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.311e+09, tolerance: 1.477e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.277e+11, tolerance: 1.348e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.999e+11, tolerance: 1.474e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 5.789e+11, tolerance: 1.463e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 5.184e+11, tolerance: 1.407e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.943e+11, tolerance: 1.477e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.470e+11, tolerance: 1.348e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 7.258e+11, tolerance: 1.474e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.103e+11, tolerance: 1.463e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 5.356e+11, tolerance: 1.407e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 7.233e+11, tolerance: 1.477e+09
+  model = cd_fast.enet_coordinate_descent(
+/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.064e+09, tolerance: 1.793e+09
+  model = cd_fast.enet_coordinate_descent(</code></pre>
+</div>
+</div>
+<div id="cell-22" class="cell" data-outputid="07d135bf-37d4-49f1-dd33-7f6e87675a99" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>gscv_fitted.cv_results_[<span class="st">'params'</span>]</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>params_df <span class="op">=</span> pd.DataFrame(gscv_fitted.cv_results_[<span class="st">'params'</span>])</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>results_df <span class="op">=</span> params_df.assign(score <span class="op">=</span> gscv_fitted.cv_results_[<span class="st">'mean_test_score'</span>])</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>results_df.sort_values(by <span class="op">=</span> <span class="st">'score'</span>, ascending <span class="op">=</span> <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
+
+  <div id="df-5e22648f-b833-4056-b229-8fdd09e77534" class="colab-df-container">
+    <div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">elasticnet__alpha</th>
+<th data-quarto-table-cell-role="th">elasticnet__l1_ratio</th>
+<th data-quarto-table-cell-role="th">score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0.01</td>
+<td>0.5</td>
+<td>0.864268</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0.01</td>
+<td>0.7</td>
+<td>0.864157</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.01</td>
+<td>0.3</td>
+<td>0.864119</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.01</td>
+<td>0.1</td>
+<td>0.863848</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9</td>
+<td>0.10</td>
+<td>0.9</td>
+<td>0.863687</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4</td>
+<td>0.01</td>
+<td>0.9</td>
+<td>0.863194</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>0.10</td>
+<td>0.7</td>
+<td>0.860003</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>0.10</td>
+<td>0.5</td>
+<td>0.856987</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>0.10</td>
+<td>0.3</td>
+<td>0.854568</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>0.10</td>
+<td>0.1</td>
+<td>0.852539</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>1.00</td>
+<td>0.9</td>
+<td>0.851613</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>1.00</td>
+<td>0.7</td>
+<td>0.839357</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>1.00</td>
+<td>0.5</td>
+<td>0.830700</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>1.00</td>
+<td>0.3</td>
+<td>0.823018</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>1.00</td>
+<td>0.1</td>
+<td>0.815716</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">19</td>
+<td>10.00</td>
+<td>0.9</td>
+<td>0.811994</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">18</td>
+<td>10.00</td>
+<td>0.7</td>
+<td>0.741137</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>10.00</td>
+<td>0.5</td>
+<td>0.673239</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>10.00</td>
+<td>0.3</td>
+<td>0.612578</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>10.00</td>
+<td>0.1</td>
+<td>0.559864</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">24</td>
+<td>100.00</td>
+<td>0.9</td>
+<td>0.534964</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">23</td>
+<td>100.00</td>
+<td>0.7</td>
+<td>0.282009</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>100.00</td>
+<td>0.5</td>
+<td>0.188264</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">21</td>
+<td>100.00</td>
+<td>0.3</td>
+<td>0.140016</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">20</td>
+<td>100.00</td>
+<td>0.1</td>
+<td>0.110670</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-5e22648f-b833-4056-b229-8fdd09e77534')" title="Convert this dataframe to an interactive table." style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-5e22648f-b833-4056-b229-8fdd09e77534 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-5e22648f-b833-4056-b229-8fdd09e77534');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-b114a476-0af2-4297-906c-586be3fa82ae">
+  <button class="colab-df-quickchart" onclick="quickchart('df-b114a476-0af2-4297-906c-586be3fa82ae')" title="Suggest charts" style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-b114a476-0af2-4297-906c-586be3fa82ae button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="cell-23" class="cell" data-outputid="1e1709ce-638e-425c-9bb8-5ac961a92d43" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>elastic_pipeline_1 <span class="op">=</span> Pipeline(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  [(<span class="st">"preprocessing"</span>, ct),</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  (<span class="st">"elasticnet"</span>, ElasticNet(alpha<span class="op">=</span><span class="fl">.01</span>, l1_ratio<span class="op">=</span><span class="fl">0.5</span>))]</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>best_model4 <span class="op">=</span> elastic_pipeline_1.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.10/dist-packages/sklearn/linear_model/_coordinate_descent.py:697: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.064e+09, tolerance: 1.793e+09
+  model = cd_fast.enet_coordinate_descent(</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell" data-outputid="6816cdfd-5c28-4473-cb13-705f674e7725" data-execution_count="58">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>best_model4.named_steps[<span class="st">'elasticnet'</span>].coef_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="58">
+<pre><code>array([-4.36707316e+03,  2.58930223e+03, -9.19417357e+02,  3.85391906e+03,
+        2.21693926e+03, -3.37367006e+03, -5.42672957e+03,  5.42672956e+03,
+        1.86723305e+03,  6.98591112e+03, -1.10890057e+04,  2.23386196e+03,
+       -1.09990714e+04,  8.99233117e+03, -1.25763948e+03,  3.26437977e+03,
+        2.26595098e+03, -1.82550578e+03, -4.39445198e+02, -1.94736847e+01,
+        7.32006891e+03, -5.43410203e+03, -2.44365652e+03,  5.78163411e+02,
+       -6.16362027e+02,  5.18209052e+03, -4.56472859e+03, -3.87569981e+03,
+        1.90088683e+03,  4.70492586e+03,  3.00238837e+02, -3.50912503e+03,
+       -8.19981053e+03,  9.22438676e+03, -1.44898572e+04, -1.06699450e+04,
+        1.14082112e+03,  9.02194540e+03, -5.36482423e+03, -2.84779674e+02,
+        1.44588571e+03, -9.23421603e+03, -1.01670815e+04,  3.40782016e+03,
+       -1.23392127e+04,  2.60565188e+04,  2.09499486e+04, -8.52307157e+03,
+       -5.88863748e+03, -5.64447620e+03, -8.43567282e+03,  8.49411921e+03,
+        2.82637493e+04, -5.25961524e+03, -3.02122151e+03, -2.05208355e+03,
+       -4.12029964e+03,  5.88166083e+03,  7.06090161e+03,  4.69101544e+03,
+       -5.17120532e+03,  4.00431384e+02, -2.88742202e+03, -3.80199864e+03,
+        1.21474590e+03, -6.49177026e+02,  3.44241442e+02,  1.34058045e+04,
+       -1.81626259e+04,  2.79009558e+03,  5.09418047e+02,  5.43497527e+02,
+        7.26563877e+03,  8.90399861e+03, -5.78197398e+02, -9.80784840e+03,
+       -5.78259160e+03, -2.17959653e+03,  3.71967074e+03,  6.68919883e+03,
+       -2.54582932e+03, -1.30932916e+03, -7.12120025e+03,  4.64652793e+03,
+       -1.89744257e+03, -2.78109441e+03,  1.17170588e+03,  1.57376957e+03,
+        2.99241193e+03, -3.97339507e+03,  1.01460254e+03, -2.88746452e+04,
+        3.68149746e+03,  1.95015954e+03,  1.37283539e+03,  5.78973407e+02,
+        4.92615876e+02, -1.90769826e+03,  2.27022618e+04, -9.37817683e+02,
+        1.18602383e+03,  2.34008809e+03,  1.43080774e+04, -6.66580185e+02,
+        5.05983822e+02, -4.39157495e+03, -1.44712794e+03,  5.26756375e+01,
+       -5.76449005e+02,  4.74085302e+03, -1.04363259e+03, -7.36108748e+03,
+       -3.97197329e+03, -1.26888663e+03, -1.46457177e+03, -1.70815332e+03,
+        2.09934467e+03,  5.16555946e+02, -1.85413547e+03, -6.66580185e+02,
+        8.85530599e+01,  4.27563248e+02,  6.21789957e+03,  5.37582700e+01,
+       -3.69623892e+02, -2.80792270e+03,  4.74085302e+03, -1.73807193e+03,
+       -4.14179301e+03,  3.14274766e+03, -1.08550680e+03, -2.91448711e+03,
+        1.39357853e+04, -5.94746756e+02, -5.09406496e+03, -8.24497342e+03,
+       -2.23061984e+02, -2.29981196e+03,  1.26760105e+03, -5.05075527e+02,
+        1.76134831e+03, -2.40050756e+03, -1.04046697e+03,  2.11806685e+03,
+        3.63895953e+03, -2.31505147e+03,  1.48666679e+04, -2.92413268e+03,
+       -6.12685242e+03, -5.50558746e+02, -5.26212337e+03, -9.28589575e+02,
+        6.27281581e+02, -1.04016127e+03,  1.17056039e+03,  1.69908881e+02,
+        1.41429441e+03,  1.13737981e+04, -6.07223049e+03, -6.71586207e+03,
+        1.55229255e+03,  4.75941367e+02,  4.59083020e+03, -3.94107498e+03,
+       -1.56925690e+03, -1.10873201e+03,  4.64386646e+03, -2.64999901e+03,
+        4.22951324e+03, -3.88929568e+03, -3.04289055e+03,  7.08805535e+02,
+        1.73735071e+03,  1.88232576e+03,  7.13440883e+02, -4.33511735e+03,
+        2.81126761e+03, -2.12691369e+03,  1.12934092e+03, -1.87945114e+03,
+        6.47562509e+01,  1.16819985e+03, -1.16819985e+03,  1.75801194e+02,
+       -8.54576081e+02,  6.31864314e+02,  1.94609177e+02, -1.48698607e+02,
+        1.66562983e+04, -4.64351183e+03, -5.92154364e+03,  8.31860626e+02,
+       -6.92210284e+03, -3.31424744e+03, -4.21733466e+03,  1.18521439e+03,
+        1.25265822e+03, -4.54927303e+02, -4.94101500e+02, -3.22537964e+03,
+        9.27011842e+03,  3.14499129e+02, -1.05543528e+03,  7.39936040e+02,
+       -6.21454809e+03, -5.23579443e+02,  6.76216985e+03,  2.03368331e+03,
+       -1.40427689e+03, -8.31587979e+02,  2.96681146e+03,  6.36560893e+02,
+       -6.27296347e+02, -2.79593670e+03, -6.56113055e+03,  4.64389500e+03,
+        3.31578655e+03, -4.42327292e+03,  5.46585110e+02,  2.47613664e+03,
+       -4.29227622e+03,  3.49974930e+03,  1.26700253e+04,  5.72254230e+03,
+        7.05100469e+03,  1.72969694e+03,  2.60724926e+03,  3.03991089e+03,
+        1.28095088e+03, -1.21530340e+03,  2.63874266e+03,  7.16072685e+03,
+        1.14877617e+04,  3.57067450e+02,  1.53061006e+04,  2.37754039e+03,
+       -6.38306306e+02,  2.95814123e+03,  1.94209268e+03, -1.81408832e+03,
+       -1.97814400e+03,  1.57754334e+03,  2.92431081e+03,  4.59989086e+03,
+        1.20005810e+03,  1.33675789e+03, -9.21862349e+02,  8.59058602e+02,
+        1.67706957e+02,  3.11944357e+03,  4.10933060e+02, -4.15920493e+03,
+       -6.14755896e+02, -9.79307592e+02])</code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
